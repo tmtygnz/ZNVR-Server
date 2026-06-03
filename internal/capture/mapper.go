@@ -17,7 +17,7 @@ func CreateCameraCapturer(rawCamera []cameras.Camera) []Capturer {
 			newCapturer, err := CreateNewCapturer(CreateNewGenericCapturerOpts{
 				URL:             camera.GetStreamUrl(),
 				Name:            camera.GetName(),
-				AiFPS:           2,
+				AiFPS:           5,
 				AiScalingWidth:  640,
 				AiScalingHeight: 640,
 			})

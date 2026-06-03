@@ -43,7 +43,15 @@ func (ih *InferenceHandler) inferenceLoop() {
 			continue
 		}
 
-		ih.lastFrame = frame
+		deltaFrame := ih.diffFrame(frame)
+		log.Printf("%f", deltaFrame)
+
+		if deltaFrame < 0.07 {
+			ih.lastFrame = frame
+			log.Println("Skipping yolo, not that much changed.")
+			continue
+		}
+
 		dataTensor := ih.prepareInput(frame)
 
 		copy(ih.modelInstance.InputTensor.GetData(), dataTensor)
@@ -60,6 +68,7 @@ func (ih *InferenceHandler) inferenceLoop() {
 				log.Printf("Found class %s with score %f", classStr, score)
 			}
 		}
+		ih.lastFrame = frame
 	}
 }
 
@@ -80,4 +89,34 @@ func (ih *InferenceHandler) prepareInput(frame []byte) []float32 {
 	}
 
 	return input
+}
+
+func (ih *InferenceHandler) diffFrame(newf []byte) float64 {
+	const totalPixels = 640 * 640
+	const noiseThreshold = 8
+	changedPixels := 0
+	base := ih.lastFrame
+
+	for i := 0; i < len(base); i += 3 {
+		rDif := int(base[i]) - int(newf[i])
+		if rDif < 0 {
+			rDif = -rDif
+		}
+
+		gDif := int(base[i+1]) - int(newf[i+1])
+		if gDif < 0 {
+			gDif = -gDif
+		}
+
+		bDif := int(base[i+2]) - int(newf[i+2])
+		if bDif < 0 {
+			bDif = -bDif
+		}
+
+		if rDif > noiseThreshold || gDif > noiseThreshold || bDif > noiseThreshold {
+			changedPixels++
+		}
+	}
+
+	return float64(changedPixels) / float64(totalPixels)
 }
