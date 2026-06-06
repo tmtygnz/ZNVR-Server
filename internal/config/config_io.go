@@ -35,5 +35,13 @@ func validate(config *Config) error {
 	if config.AiScalingSize == 0 {
 		return MissingFieldError("Check AIScalingSize must exist & not be 0.")
 	}
+
+	if config.ObjDetectionModel == "" {
+		slog.Warn("`obj_detection_model` is not set. It is okay if you will not be using any AI features.")
+	}
+
+	if config.OnnxDllPath == "" {
+		slog.Warn("`onnx_dll_path` is not set. It is okay if you will not be using any AI features.")
+	}
 	return nil
 }

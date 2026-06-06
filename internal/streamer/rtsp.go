@@ -45,7 +45,7 @@ type RtspStreamer struct {
 	scalingSize  int
 	isStreaming  StreamState
 	aiCmd        *exec.Cmd
-	aiFrameChan  chan []byte
+	aiFrameChan  chan []float32
 	streamingFps int
 }
 
@@ -60,7 +60,7 @@ func CreateRtspStreamer(opts *CreateRtspStreamerOpts) *RtspStreamer {
 
 		scalingSize:  opts.ScalingSize,
 		isStreaming:  Stopped,
-		aiFrameChan:  make(chan []byte, 1),
+		aiFrameChan:  make(chan []float32, 1),
 		streamingFps: opts.StreamingFps,
 	}
 }
@@ -182,7 +182,14 @@ func (rs *RtspStreamer) StartAIStreaming(eGCtx context.Context) error {
 		"threads": "1",
 	}
 
-	template := ffmpeg_go.Input(rs.rtspVendor.URL(), inputArgs)
+	var url string
+	if rs.rtspVendor.SURL() != "" {
+		url = rs.rtspVendor.SURL()
+	} else {
+		url = rs.rtspVendor.URL()
+	}
+
+	template := ffmpeg_go.Input(url, inputArgs)
 	templateWithContext := ffmpeg_go.OutputContext(eGCtx, []*ffmpeg_go.Stream{template}, "pipe:1", outputArgs).GlobalArgs("-loglevel", "error")
 
 	command := templateWithContext.Compile()
@@ -239,7 +246,7 @@ func (rs *RtspStreamer) readAiFrames(stdout io.ReadCloser, ctx context.Context, 
 		case <-ctx.Done():
 			slog.Info("Other function failed, quitting AI streamer.")
 			return ctx.Err()
-		case rs.aiFrameChan <- frameBuffer:
+		case rs.aiFrameChan <- rs.prepareInput(frameBuffer):
 		}
 	}
 }
@@ -258,6 +265,21 @@ func (rs *RtspStreamer) cleanupAiStreamer(cmd *exec.Cmd) {
 	slog.Info("AI Streamer cleanedup.")
 }
 
+func (rs *RtspStreamer) prepareInput(frame []byte) []float32 {
+	size := rs.scalingSize * rs.scalingSize
+
+	input := make([]float32, size*3)
+
+	for i := range size {
+		// RGB Interleaved (byte) -> RGB Planar (float32)
+		input[i] = float32(frame[i*3]) / 255.0          // R
+		input[i+size] = float32(frame[i*3+1]) / 255.0   // G
+		input[i+size*2] = float32(frame[i*3+2]) / 255.0 // B
+	}
+
+	return input
+}
+
 func (rs *RtspStreamer) StopAIStreaming() error {
 	rs.mu.Lock()
 
@@ -271,10 +293,10 @@ func (rs *RtspStreamer) StopAIStreaming() error {
 	return nil
 }
 
-func (rs *RtspStreamer) GetAIFrame() []byte {
+func (rs *RtspStreamer) GetAIFrame() ([]float32, bool) {
 	select {
-	case data := <-rs.aiFrameChan:
-		return data
+	case data, ok := <-rs.aiFrameChan:
+		return data, ok
 	}
 }
 

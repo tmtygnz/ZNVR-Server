@@ -12,7 +12,7 @@ type Streamer interface {
 
 	StartAIStreaming(eGCtx context.Context) error
 	StopAIStreaming() error
-	GetAIFrame() []byte
+	GetAIFrame() ([]float32, bool)
 	Vendor() vendors.Vendor
 }
 

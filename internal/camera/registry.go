@@ -2,6 +2,7 @@ package camera
 
 import (
 	"context"
+	"corvette/internal/object_detection"
 	"corvette/internal/streamer"
 	"log/slog"
 	"sync"
@@ -21,10 +22,11 @@ func CreateCameraRegistry(ctx context.Context) *CameraRegistry {
 	}
 }
 
-func (cr *CameraRegistry) RegisterArrStreamers(streamers []streamer.Streamer) {
+func (cr *CameraRegistry) RegisterArrStreamers(streamers []streamer.Streamer, modelInstance *object_detection.ObjectDetectionModelInstance) {
 	for _, streamer := range streamers {
 		slog.Info("Registering streamer, creating camera handler", "for", streamer.Vendor().CamName())
-		newCameraHandler := CreateCameraHandler(streamer, cr.parentCtx)
+		objectDetectionHandler := object_detection.CreateObjectDetectionHandler(modelInstance)
+		newCameraHandler := CreateCameraHandler(streamer, cr.parentCtx, objectDetectionHandler)
 		cr.cameraHandlers[streamer.Vendor().CamName()] = newCameraHandler
 	}
 }

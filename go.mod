@@ -12,4 +12,5 @@ require (
 	github.com/aws/aws-sdk-go v1.55.8 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/u2takey/go-utils v0.3.1 // indirect
+	github.com/yalue/onnxruntime_go v1.31.0 // indirect
 )
