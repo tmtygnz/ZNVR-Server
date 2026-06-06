@@ -78,16 +78,18 @@ func (rs *RtspStreamer) StartRecording(eGCtx context.Context) error {
 	dirPath := filepath.Join(folderPath, `out_%d-%m-%Y-%H-%M-%S.mp4`)
 
 	inputArgs := ffmpeg_go.KwArgs{
-		"rtsp_transport": "tcp",
-		"timeout":        "5000000",
+		"rtsp_transport":  "tcp",
+		"timeout":         "5000000",
+		"analyzeduration": "0",
 	}
 
 	outputArgs := ffmpeg_go.KwArgs{
-		"c":                "copy",
-		"f":                "segment",
-		"segment_time":     "300",
-		"reset_timestamps": "1",
-		"strftime":         "1",
+		"c":                      "copy",
+		"f":                      "segment",
+		"segment_time":           "300",
+		"reset_timestamps":       "1",
+		"strftime":               "1",
+		"segment_format_options": "movflags=+faststart",
 	}
 
 	template := ffmpeg_go.Input(rs.rtspVendor.URL(), inputArgs)
@@ -168,6 +170,8 @@ func (rs *RtspStreamer) StartAIStreaming(eGCtx context.Context) error {
 	inputArgs := ffmpeg_go.KwArgs{
 		"rtsp_transport": "tcp",
 		"timeout":        "5000000",
+		"fflags":         "nobuffer",
+		"flags":          "low_delay",
 	}
 
 	outputArgs := ffmpeg_go.KwArgs{
@@ -175,6 +179,7 @@ func (rs *RtspStreamer) StartAIStreaming(eGCtx context.Context) error {
 		"c:v":     "rawvideo",
 		"pix_fmt": "rgb24",
 		"f":       "rawvideo",
+		"threads": "1",
 	}
 
 	template := ffmpeg_go.Input(rs.rtspVendor.URL(), inputArgs)
