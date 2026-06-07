@@ -29,10 +29,24 @@ func (odh *ObjectDetectionHandler) DoInference(frame []float32) error {
 	for i := range 300 {
 		offset := i * 6
 		score := data[offset+4]
+
 		if score > 0.6 {
 			classId := int(data[offset+5])
 			classStr := strings.TrimSpace(odh.modelInstance.Categories[classId])
-			slog.Info("Found class %s with score %f", classStr, score)
+
+			// Extracting coordinates for the structured log
+			bbox := []float32{
+				data[offset+0], // x1
+				data[offset+1], // y1
+				data[offset+2], // x2
+				data[offset+3], // y2
+			}
+
+			slog.Info("Detection found",
+				"class", classStr,
+				"score", score,
+				"position", bbox,
+			)
 		}
 	}
 	odh.lastFrame = frame

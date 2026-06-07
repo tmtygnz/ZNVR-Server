@@ -293,11 +293,8 @@ func (rs *RtspStreamer) StopAIStreaming() error {
 	return nil
 }
 
-func (rs *RtspStreamer) GetAIFrame() ([]float32, bool) {
-	select {
-	case data, ok := <-rs.aiFrameChan:
-		return data, ok
-	}
+func (rs *RtspStreamer) GetAIFrame() chan []float32 {
+	return rs.aiFrameChan
 }
 
 func (rs *RtspStreamer) Vendor() vendors.Vendor {
