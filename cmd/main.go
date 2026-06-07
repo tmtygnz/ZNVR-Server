@@ -5,6 +5,7 @@ import (
 	"corvette/internal/camera"
 	"corvette/internal/config"
 	"corvette/internal/object_detection"
+	"corvette/internal/platform/handler"
 	"corvette/internal/streamer"
 	"corvette/internal/vendors"
 	"log/slog"
@@ -26,6 +27,9 @@ func main() {
 	coreCtx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
+	httpHandler := handler.NewHttpHandler()
+	httpHandler.Start(":8080")
+
 	slog.Info("Corvette started.")
 	config := config.ReadConfig()
 
@@ -33,8 +37,8 @@ func main() {
 
 	vendorsFromConfig := vendors.VendorMapper(config.Cameras)
 	streamers := streamer.StreamerMapper(vendorsFromConfig)
-	cameraRegistry := camera.CreateCameraRegistry(coreCtx)
-	cameraRegistry.RegisterArrStreamers(streamers, objectDetectionModel)
+	cameraRegistry := camera.CreateCameraRegistry(coreCtx, objectDetectionModel)
+	cameraRegistry.RegisterArrStreamers(streamers)
 	cameraRegistry.StartAllRegisteredCameras()
 
 	<-coreCtx.Done()

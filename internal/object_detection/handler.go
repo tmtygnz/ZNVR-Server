@@ -30,7 +30,7 @@ func (odh *ObjectDetectionHandler) DoInference(frame []float32) error {
 		offset := i * 6
 		score := data[offset+4]
 
-		if score > 0.6 {
+		if score > 0.4 {
 			classId := int(data[offset+5])
 			classStr := strings.TrimSpace(odh.modelInstance.Categories[classId])
 

@@ -58,19 +58,22 @@ func (ch *CameraHandler) StartAIInference(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			ch.objDetModel.ModelInstance().Destroy()
 			slog.Info("Closing object detection inference loop. Other function crashed.")
 			return ctx.Err()
-		case frame, ok := <-frameChan:
-			if !ok {
-				ch.objDetModel.ModelInstance().Destroy()
-				slog.Warn("Closing inference: Stream channel closed.")
-				return nil
-			}
+		case frame := <-frameChan:
 			err := ch.objDetModel.DoInference(frame)
 			if err != nil {
 				return err
 			}
 		}
 	}
+}
+
+func (ch *CameraHandler) GetStatus() OnlineStatus {
+	return ch.status
+}
+
+func (ch *CameraHandler) CloseAll() {
+	ch.streamer.Destroy()
+	ch.objDetModel.ModelInstance().Destroy()
 }

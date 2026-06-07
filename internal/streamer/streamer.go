@@ -14,6 +14,8 @@ type Streamer interface {
 	StopAIStreaming() error
 	GetAIFrame() chan []float32
 	Vendor() vendors.Vendor
+
+	Destroy()
 }
 
 func StreamerMapper(vendors []vendors.Vendor) []Streamer {

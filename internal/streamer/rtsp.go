@@ -113,11 +113,17 @@ func (rs *RtspStreamer) StartRecording(eGCtx context.Context) error {
 	}
 	rs.mu.Unlock()
 
-	return rs.waitForCommand(command, &errBuff)
+	return rs.waitForCommand(eGCtx, command, &errBuff)
 }
 
-func (rs *RtspStreamer) waitForCommand(command *exec.Cmd, errBuf *bytes.Buffer) error {
+func (rs *RtspStreamer) waitForCommand(ctx context.Context, command *exec.Cmd, errBuf *bytes.Buffer) error {
 	defer rs.cleanupRecorder(command)
+	go func() {
+		<-ctx.Done()
+		if command.Process != nil {
+			command.Process.Kill()
+		}
+	}()
 	err := command.Wait()
 	if err != nil {
 		slog.Error("ffmpeg command returned.", "err", err.Error())
@@ -241,7 +247,7 @@ func (rs *RtspStreamer) readAiFrames(stdout io.ReadCloser, ctx context.Context, 
 				return ctx.Err()
 			default:
 				slog.Error("Failed to read stdout of AI stream.", "err", err.Error())
-				return err
+				return fmt.Errorf("AI Stream lost.")
 			}
 		}
 		select {
@@ -263,7 +269,6 @@ func (rs *RtspStreamer) cleanupAiStreamer(cmd *exec.Cmd) {
 
 	rs.aiCmd = nil
 	rs.isStreaming = Stopped
-	close(rs.aiFrameChan)
 	slog.Info("AI Streamer cleanedup.")
 }
 
@@ -302,4 +307,10 @@ func (rs *RtspStreamer) Vendor() vendors.Vendor {
 	defer rs.mu.Unlock()
 
 	return rs.rtspVendor
+}
+
+func (rs *RtspStreamer) Destroy() {
+	rs.mu.Lock()
+	defer rs.mu.Unlock()
+	close(rs.aiFrameChan)
 }
