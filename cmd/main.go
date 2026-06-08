@@ -4,8 +4,11 @@ import (
 	"context"
 	"corvette/internal/camera"
 	"corvette/internal/config"
+	"corvette/internal/database"
 	"corvette/internal/object_detection"
 	"corvette/internal/platform/handler"
+	"corvette/internal/platform/provider"
+	"corvette/internal/repositories"
 	"corvette/internal/streamer"
 	"corvette/internal/vendors"
 	"log/slog"
@@ -26,6 +29,12 @@ func main() {
 	pprofStuffs()
 	coreCtx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
+
+	dbProvider := provider.CreateSQLiteProvider()
+	defer dbProvider.Close()
+
+	queries := database.New(dbProvider.Conn)
+	_ = repositories.CreateCameraRepository(queries, coreCtx)
 
 	httpHandler := handler.NewHttpHandler()
 	httpHandler.Start(":8080")
