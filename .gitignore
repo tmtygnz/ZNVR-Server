@@ -3,3 +3,4 @@ recordings
 scripts
 models
 .env
+corvette.db
