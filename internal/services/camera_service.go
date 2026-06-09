@@ -1,4 +1,4 @@
-package repositories
+package services
 
 import (
 	"context"
@@ -9,20 +9,20 @@ import (
 	"time"
 )
 
-type CameraRepository struct {
+type CameraService struct {
 	db  *database.Queries
 	ctx context.Context
 }
 
-func CreateCameraRepository(db *database.Queries, ctx context.Context) *CameraRepository {
-	slog.Info("Camera repository created.")
-	return &CameraRepository{
+func CreateCameraService(db *database.Queries, ctx context.Context) *CameraService {
+	slog.Info("Camera Service created.")
+	return &CameraService{
 		db:  db,
 		ctx: ctx,
 	}
 }
 
-func (cr *CameraRepository) CreateCamera(opts *domains.RepoCreateCameraOpts) (*domains.Camera, error) {
+func (cr *CameraService) CreateCamera(opts *domains.RepoCreateCameraOpts) (*domains.Camera, error) {
 	subUrl := sql.NullString{
 		String: opts.SURL,
 		Valid:  true,
@@ -43,7 +43,7 @@ func (cr *CameraRepository) CreateCamera(opts *domains.RepoCreateCameraOpts) (*d
 	return domains.CameraFromSQLC(data), nil
 }
 
-func (cr *CameraRepository) GetCamera(camID int) (*domains.Camera, error) {
+func (cr *CameraService) GetCamera(camID int) (*domains.Camera, error) {
 	camera, err := cr.db.GetCamera(cr.ctx, int64(camID))
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (cr *CameraRepository) GetCamera(camID int) (*domains.Camera, error) {
 	return domains.CameraFromSQLC(camera), nil
 }
 
-func (cr *CameraRepository) ListCameras() ([]*domains.Camera, error) {
+func (cr *CameraService) ListCameras() ([]*domains.Camera, error) {
 	cameras, err := cr.db.ListCameras(cr.ctx)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (cr *CameraRepository) ListCameras() ([]*domains.Camera, error) {
 	return mappedCameras, nil
 }
 
-func (cr *CameraRepository) UpdateCamera(opts *domains.UpdateCameraOpts) (*domains.Camera, error) {
+func (cr *CameraService) UpdateCamera(opts *domains.UpdateCameraOpts) (*domains.Camera, error) {
 	subUrl := sql.NullString{
 		String: opts.SURL,
 		Valid:  true,
@@ -86,7 +86,7 @@ func (cr *CameraRepository) UpdateCamera(opts *domains.UpdateCameraOpts) (*domai
 	return domains.CameraFromSQLC(camera), nil
 }
 
-func (cr *CameraRepository) UpdateCameraStatus(camID int, status string) (*domains.Camera, error) {
+func (cr *CameraService) UpdateCameraStatus(camID int, status string) (*domains.Camera, error) {
 	camera, err := cr.db.UpdateCameraStatus(cr.ctx,
 		database.UpdateCameraStatusParams{CameraID: int64(camID), Status: status})
 	if err != nil {
@@ -96,7 +96,7 @@ func (cr *CameraRepository) UpdateCameraStatus(camID int, status string) (*domai
 	return domains.CameraFromSQLC(camera), nil
 }
 
-func (cr *CameraRepository) DeleteCamera(camID int) error {
+func (cr *CameraService) DeleteCamera(camID int) error {
 	err := cr.db.DeleteCamera(cr.ctx, int64(camID))
 	if err != nil {
 		return err
@@ -104,7 +104,7 @@ func (cr *CameraRepository) DeleteCamera(camID int) error {
 	return nil
 }
 
-func (cr *CameraRepository) ListOnlineCameras() ([]*domains.Camera, error) {
+func (cr *CameraService) ListOnlineCameras() ([]*domains.Camera, error) {
 	cameras, err := cr.db.ListOnlineCameras(cr.ctx)
 	if err != nil {
 		return nil, err

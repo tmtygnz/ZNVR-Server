@@ -29,7 +29,7 @@ type UpdateCameraOpts struct {
 	CameraName string
 }
 
-type CameraRepository interface {
+type CameraService interface {
 	CreateCamera(opts *RepoCreateCameraOpts) (*Camera, error)
 	GetCamera(id int) (*Camera, error)
 	ListCameras() ([]*Camera, error)

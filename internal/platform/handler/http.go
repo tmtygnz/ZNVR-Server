@@ -16,3 +16,7 @@ func NewHttpHandler() *HttpServer {
 func (hs *HttpServer) Start(port string) {
 	go hs.fiberApp.Listen(port)
 }
+
+func (hs *HttpServer) App() *fiber.App {
+	return hs.fiberApp
+}

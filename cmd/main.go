@@ -7,8 +7,9 @@ import (
 	"corvette/internal/database"
 	"corvette/internal/object_detection"
 	"corvette/internal/platform/handler"
+	http_handlers "corvette/internal/platform/handler/handlers"
 	"corvette/internal/platform/provider"
-	"corvette/internal/repositories"
+	"corvette/internal/services"
 	"corvette/internal/streamer"
 	"corvette/internal/vendors"
 	"log/slog"
@@ -34,10 +35,6 @@ func main() {
 	defer dbProvider.Close()
 
 	queries := database.New(dbProvider.Conn)
-	_ = repositories.CreateCameraRepository(queries, coreCtx)
-
-	httpHandler := handler.NewHttpHandler()
-	httpHandler.Start(":8080")
 
 	slog.Info("Corvette started.")
 	config := config.ReadConfig()
@@ -49,6 +46,13 @@ func main() {
 	cameraRegistry := camera.CreateCameraRegistry(coreCtx, objectDetectionModel)
 	cameraRegistry.RegisterArrStreamers(streamers)
 	cameraRegistry.StartAllRegisteredCameras()
+
+	httpHandler := handler.NewHttpHandler()
+
+	httpHandler.Start(":8080")
+
+	cameraService := services.CreateCameraService(queries, coreCtx)
+	http_handlers.CreateCameraHttpHandler(httpHandler.App(), cameraService)
 
 	<-coreCtx.Done()
 	cameraRegistry.WaitToClose()
