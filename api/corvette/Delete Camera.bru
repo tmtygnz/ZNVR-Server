@@ -1,0 +1,15 @@
+meta {
+  name: Delete Camera
+  type: http
+  seq: 6
+}
+
+delete {
+  url: http://localhost:9090/cameras?camID=1
+  body: none
+  auth: inherit
+}
+
+params:query {
+  camID: 1
+}

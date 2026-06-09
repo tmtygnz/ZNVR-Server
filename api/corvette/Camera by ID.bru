@@ -1,0 +1,15 @@
+meta {
+  name: Camera by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://127.0.0.1:9090/cameras?camID=1
+  body: none
+  auth: inherit
+}
+
+params:query {
+  camID: 1
+}

@@ -1,0 +1,21 @@
+meta {
+  name: Update camera
+  type: http
+  seq: 5
+}
+
+patch {
+  url: http://localhost:9090/camera
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "cameraName": "Front Door Camera",
+    "cameraId": 1,
+    "url": "https://example.com/stream",
+    "surl": "https://example.com/secure-stream",
+    "type": "Generic"
+  }
+}
